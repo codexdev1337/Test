@@ -1,32 +1,39 @@
-# ForgeLab — Development Snapshot
+# ForgeLab — Remote Development Repository
 
-This private repository is the remote home for ForgeLab planning, source snapshots, and implementation progress.
+ForgeLab is a local-first R&D workbench evolving toward a governed autonomous research and software-engineering platform.
 
 ## Current state
 
-- **Last stable release:** 0.3.0
-- **Development snapshot:** 0.4.0.dev1
-- **Local source commit:** `260d7141c22b63a5d2b2f5c5dafd9d34c3afb365`
-- **Development tag:** `v0.4.0-dev1`
-- **Improvement review:** 2,000 structured cycles, built from 50 subsystem areas × 40 engineering lenses
-- **Latest validated suite:** 47 passing tests
-- **Offline benchmark:** 3/3 scenarios passed
+- Stable baseline: **0.3.0**
+- Active development preview: **0.4.0.dev1**
+- Local source commit: `260d7141c22b63a5d2b2f5c5dafd9d34c3afb365`
+- Development tag: `v0.4.0-dev1`
+- Review exercise: **2,000 structured improvement cycles**
+- 0.4.0 preview validation: **47 tests passed; 3/3 offline benchmarks passed**
 
-## Repository contents
+## Remote documents
 
-- `docs/IMPROVEMENT_CYCLES_50.md` — earlier 50-cycle review
-- `docs/IMPROVEMENT_REVIEW_2000.md` — 2,000-cycle methodology, scope and validation
-- `docs/IMPLEMENTATION_PLAN_0.4.md` — 0.4.0 work packages and actual implementation status
-- `docs/ROADMAP.md` — planned milestones through 1.0.0
-- `artifacts/README.md` — source snapshot and review-register reconstruction instructions
-- `artifacts/` — split binary source archive and detailed 2,000-cycle register
+- [2,000-cycle improvement review](docs/IMPROVEMENT_REVIEW_2000.md)
+- [50-domain cycle register and decisions](docs/IMPROVEMENT_CYCLES_50.md)
+- [0.4.0 implementation plan](docs/IMPLEMENTATION_PLAN_0.4.md)
+- [0.4.0.dev1 implementation snapshot](docs/IMPLEMENTATION_0.4.0_DEV1.md)
+- [Development roadmap](docs/ROADMAP.md)
+- [Artifact and source handoff notes](artifacts/README.md)
 
-## 0.4.0.dev1 implementation
+## What is implemented in 0.4.0.dev1
 
-The first FL-401 slice adds durable SQLite stage-attempt records, fingerprinted checkpoint reuse, SHA-256 verification, worker retry resume of the same run, and CLI/dashboard checkpoint inspection. It is an early development preview, not a complete 0.4.0 release. Hard budgets, atomic file publication, migration registry, worker fencing, provider telemetry and other planned packages are not yet complete.
+SQLite-backed stage-attempt checkpoints, SHA-256 output integrity, input fingerprints, reuse of completed stage outputs on retries, a stage-inspection CLI command, and a read-only stage API endpoint.
 
-## Review methodology
+**Important:** This is a development preview. It is not yet a stable or production-ready 0.4.0. Budgets, stage dependency invalidation, atomic external artifact publishing, provider telemetry, cancellation/deadline propagation, worker fencing, a complete migration/restore framework, append-only audit, and strict output schemas remain release gates.
 
-The 2,000-cycle review is a reproducible pairwise matrix: 50 subsystem areas crossed with 40 engineering lenses. Each record includes finding, implementation plan, expansion, review of the accumulated plan, and plan update. This is a structured planning exercise, not 2,000 independent model conversations or a claim that future work is implemented.
+## Improvement-loop methodology
 
-See `docs/IMPROVEMENT_REVIEW_2000.md` for the method, and `artifacts/README.md` for reconstructing the detailed JSONL register and source archive.
+The 2,000-cycle exercise is generated as a reproducible matrix of **50 improvement domains × 40 engineering review lenses**. Each record carries the requested sequence: find a gap, plan an implementation, expand the improvement surface, review existing plans, and update the accumulated plan. It is not a claim of 2,000 separate LLM conversations. The generator and validator are included in the source handoff archive.
+
+## Source snapshot
+
+The complete source code remains preserved in the local Git bundle and source archive from the development session. A binary source archive has **not yet been committed to this GitHub repository**. The handoff instructions in `artifacts/README.md` explain the remaining publication step. The planning and implementation status documents in this repository are saved remotely on `main`.
+
+## Development policy
+
+Changes should be made against the tested source revision, committed in small increments, and accompanied by focused tests. External publishing, deployment, destructive operations, arbitrary execution, and spending remain subject to explicit authorization and appropriate safeguards.
