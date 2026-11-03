@@ -1,38 +1,32 @@
 # ForgeLab — Development Snapshot
 
-This repository is the GitHub home for the ForgeLab development plans and project handoff.
+This private repository is the remote home for ForgeLab planning, source snapshots, and implementation progress.
 
 ## Current state
 
-- Product version: **0.3.0**
-- Source repository commit: `a8abaf90892bec57e265a5dfb722f6e688d8cf74`
-- Source release tag: `v0.3.0`
-- Improvement review: **50 cycles completed**
-- Next target: **0.4.0 — recoverable autonomous execution**
+- **Last stable release:** 0.3.0
+- **Development snapshot:** 0.4.0.dev1
+- **Local source commit:** `260d7141c22b63a5d2b2f5c5dafd9d34c3afb365`
+- **Development tag:** `v0.4.0-dev1`
+- **Improvement review:** 2,000 structured cycles, built from 50 subsystem areas × 40 engineering lenses
+- **Latest validated suite:** 47 passing tests
+- **Offline benchmark:** 3/3 scenarios passed
 
-## Published in this repository
+## Repository contents
 
-- `docs/IMPROVEMENT_CYCLES_50.md` — concise register of all 50 improvement cycles and their key design decisions
-- `docs/IMPLEMENTATION_PLAN_0.4.md` — ten 0.4.0 work packages, dependencies, acceptance criteria, tests, risks, and release gates
-- `docs/ROADMAP.md` — roadmap through 1.0.0
+- `docs/IMPROVEMENT_CYCLES_50.md` — earlier 50-cycle review
+- `docs/IMPROVEMENT_REVIEW_2000.md` — 2,000-cycle methodology, scope and validation
+- `docs/IMPLEMENTATION_PLAN_0.4.md` — 0.4.0 work packages and actual implementation status
+- `docs/ROADMAP.md` — planned milestones through 1.0.0
+- `artifacts/README.md` — source snapshot and review-register reconstruction instructions
+- `artifacts/` — split binary source archive and detailed 2,000-cycle register
 
-## Source-code status
+## 0.4.0.dev1 implementation
 
-The complete ForgeLab 0.3.0 source tree and its original Git history are preserved in a separate Git bundle from the development handoff. **That binary bundle has not yet been uploaded into this GitHub repository.** The source commit above identifies the exact snapshot to publish. The files committed here are the 50-cycle planning deliverables, not the complete application source.
+The first FL-401 slice adds durable SQLite stage-attempt records, fingerprinted checkpoint reuse, SHA-256 verification, worker retry resume of the same run, and CLI/dashboard checkpoint inspection. It is an early development preview, not a complete 0.4.0 release. Hard budgets, atomic file publication, migration registry, worker fencing, provider telemetry and other planned packages are not yet complete.
 
-To publish the source history after downloading the handoff bundle:
+## Review methodology
 
-```bash
-git clone forgelab-50-cycle-review.bundle forgelab
-cd forgelab
-git remote add github https://github.com/codexdev1337/Test.git
-git push github main:forgelab-source --tags
-```
+The 2,000-cycle review is a reproducible pairwise matrix: 50 subsystem areas crossed with 40 engineering lenses. Each record includes finding, implementation plan, expansion, review of the accumulated plan, and plan update. This is a structured planning exercise, not 2,000 independent model conversations or a claim that future work is implemented.
 
-This uses a separate `forgelab-source` branch so the documentation on `main` is not overwritten by the independent source repository history.
-
-## Scope and validation
-
-The 50-cycle review is a planning deliverable; it does not mean all proposed future features have shipped. The 0.3.0 implementation was previously validated with 38 automated tests and three offline benchmark scenarios. Stage-level checkpoint resumption remains planned for 0.4.0.
-
-External publishing, deployment, destructive operations, arbitrary execution, and spending remain subject to explicit authorization and appropriate safeguards.
+See `docs/IMPROVEMENT_REVIEW_2000.md` for the method, and `artifacts/README.md` for reconstructing the detailed JSONL register and source archive.
