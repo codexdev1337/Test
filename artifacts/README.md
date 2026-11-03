@@ -1,32 +1,43 @@
 # Source and artifact handoff
 
-The repository currently contains the 2,000-cycle methodology/review docs and the 0.4.0 implementation status. It does not yet contain a committed copy of the complete ForgeLab source bundle.
+This repository's `main` branch contains the remote project record: the 2,000-cycle review documentation, the 0.4.0 implementation plan, the 0.4.0.dev1 implementation status, and the roadmap.
+
+**The complete application source is not yet committed to this GitHub repository.** It remains preserved in the local development source archive and Git bundle delivered in this conversation.
 
 ## Exact source revision
 
 - Source repository commit: `260d7141c22b63a5d2b2f5c5dafd9d34c3afb365`
 - Development tag: `v0.4.0-dev1`
-- Source archive checksum is recorded in the local handoff package.
-- The project has been tested with 47 automated tests and 3/3 offline benchmark scenarios.
+- Validation: 47 automated tests passed; 3/3 offline benchmark scenarios passed.
+- The source snapshot includes the stage checkpoint implementation and the improvement-review generator.
 
-## Local source handoff
+## Publish the preserved Git history into this repository
 
-The source archive and Git bundle were built in the development workspace and are available from the conversation's file links. To publish the exact source, download the source archive, extract it, add this repository as a Git remote, and push the extracted source to a dedicated branch (not `main`, which contains this remote project record):
+Download the **Git bundle** from the conversation files, then run:
 
 ```bash
-tar -xJf forgelab-source-only.tar.gz.xz
+git clone forgelab-0.4.0-dev1.bundle forgelab
 cd forgelab
-git remote add origin https://github.com/codexdev1337/Test.git
-git push origin HEAD:refs/heads/forgelab-source
-git push origin --tags
+git remote add github https://github.com/codexdev1337/Test.git
+git push github main:forgelab-source --tags
 ```
 
-For the full preserved Git history, use the separate Git bundle and clone it directly before adding the remote.
+This puts the full source history on a dedicated `forgelab-source` branch. It does not overwrite the documentation on `main`.
 
-## 2,000-cycle register
+## Restore from the source-only archive
 
-The 2,000 records are generated deterministically by `tools/improvement_review.py` in the source snapshot. Run the generator with its validation mode to regenerate the detailed Markdown and JSONL register. The remote planning documents summarize the methodology and consolidated priorities.
+The source-only archive is an XZ-compressed gzip tar archive. Extract it with:
 
-## Important status distinction
+```bash
+xz -dc forgelab-source-only.tar.gz.xz | tar -xzf -
+```
 
-A planning artifact or implementation report is not a substitute for committed source code. This repository's `main` branch currently records the status and engineering plan; the full source archive still needs to be pushed to `forgelab-source` to make the application source directly browsable here.
+It does not contain the original Git history; use the Git bundle when history matters.
+
+## Regenerate the 2,000-cycle register
+
+The source archive includes `tools/improvement_review.py`. Run its generation and validation commands to regenerate the detailed Markdown and JSONL cycle register. The repository's `docs/IMPROVEMENT_REVIEW_2000.md` records the 50-domain × 40-lens methodology and the planning decisions.
+
+## Status distinction
+
+The remote plans and status records are committed to GitHub. The original application source bundle still needs to be pushed to `forgelab-source` to make the source tree directly browsable on GitHub. The 0.4.0.dev1 implementation is a development preview, not a stable or production-ready release.
