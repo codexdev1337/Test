@@ -1,34 +1,32 @@
-# Remote ForgeLab artifacts
+# Source and artifact handoff
 
-The binary source snapshot and full 2,000-cycle JSONL register are stored as split raw-byte parts.
+The repository currently contains the 2,000-cycle methodology/review docs and the 0.4.0 implementation status. It does not yet contain a committed copy of the complete ForgeLab source bundle.
 
-## Reassemble source snapshot
+## Exact source revision
 
-Download `forgelab-source.tar.gz.xz.part00` through `part04` and concatenate in numeric order:
+- Source repository commit: `260d7141c22b63a5d2b2f5c5dafd9d34c3afb365`
+- Development tag: `v0.4.0-dev1`
+- Source archive checksum is recorded in the local handoff package.
+- The project has been tested with 47 automated tests and 3/3 offline benchmark scenarios.
 
-```bash
-cat forgelab-source.tar.gz.xz.part00 forgelab-source.tar.gz.xz.part01 forgelab-source.tar.gz.xz.part02 forgelab-source.tar.gz.xz.part03 forgelab-source.tar.gz.xz.part04 > forgelab-source.tar.gz.xz
-xz -dc forgelab-source.tar.gz.xz > forgelab-source.tar.gz
-tar -xzf forgelab-source.tar.gz
-```
+## Local source handoff
 
-## Reassemble the 2,000-cycle register
-
-Download `improvement-review-2000.jsonl.xz.part00` through `part02`:
+The source archive and Git bundle were built in the development workspace and are available from the conversation's file links. To publish the exact source, download the source archive, extract it, add this repository as a Git remote, and push the extracted source to a dedicated branch (not `main`, which contains this remote project record):
 
 ```bash
-cat improvement-review-2000.jsonl.xz.part00 improvement-review-2000.jsonl.xz.part01 improvement-review-2000.jsonl.xz.part02 > improvement-review-2000.jsonl.xz
-xz -dc improvement-review-2000.jsonl.xz > improvement-review-2000.jsonl
+tar -xJf forgelab-source-only.tar.gz.xz
+cd forgelab
+git remote add origin https://github.com/codexdev1337/Test.git
+git push origin HEAD:refs/heads/forgelab-source
+git push origin --tags
 ```
 
-Each line records five loop stages: finding, implementation plan, expansion, plan review, and plan update.
+For the full preserved Git history, use the separate Git bundle and clone it directly before adding the remote.
 
-## Regenerate full reports
+## 2,000-cycle register
 
-After extracting the source snapshot:
+The 2,000 records are generated deterministically by `tools/improvement_review.py` in the source snapshot. Run the generator with its validation mode to regenerate the detailed Markdown and JSONL register. The remote planning documents summarize the methodology and consolidated priorities.
 
-```bash
-python tools/improvement_review.py --root .
-```
+## Important status distinction
 
-The generator validates the 50 × 40 matrix and recreates the full Markdown and JSONL reports. This is a systematic planning review, not 2,000 independent model conversations.
+A planning artifact or implementation report is not a substitute for committed source code. This repository's `main` branch currently records the status and engineering plan; the full source archive still needs to be pushed to `forgelab-source` to make the application source directly browsable here.
