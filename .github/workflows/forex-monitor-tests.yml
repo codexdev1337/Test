@@ -1,0 +1,29 @@
+name: Forex monitor tests
+
+on:
+  push:
+    paths:
+      - "forex-monitor/**"
+      - ".github/workflows/forex-monitor-tests.yml"
+  pull_request:
+    paths:
+      - "forex-monitor/**"
+      - ".github/workflows/forex-monitor-tests.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Compile scanner and decision modules
+        run: python -m compileall -q forex-monitor
+      - name: Run offline tests
+        run: python -m unittest discover -s forex-monitor -p "test_*.py" -v
