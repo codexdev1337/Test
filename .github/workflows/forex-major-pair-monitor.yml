@@ -1,0 +1,40 @@
+name: Forex major-pair monitor
+
+on:
+  schedule:
+    # 06:00-11:55 America/Chicago, Monday-Friday.
+    # Six hours keeps the private-repository runner and free FX-data budgets bounded.
+    - cron: "*/5 6-11 * * 1-5"
+      timezone: "America/Chicago"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: forex-major-pair-monitor
+  cancel-in-progress: false
+
+jobs:
+  scan:
+    # Enable only after both the API key and repository variable are configured.
+    if: \${{ vars.FOREX_MONITOR_ENABLED == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out scanner
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Scan major FX pairs and notify on new setups
+        env:
+          TWELVE_DATA_API_KEY: \${{ secrets.TWELVE_DATA_API_KEY }}
+          GITHUB_TOKEN: \${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: \${{ github.repository }}
+          FOREX_ALERT_ISSUE: "1"
+        run: python forex-monitor/scan.py
