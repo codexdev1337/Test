@@ -5,6 +5,7 @@ on:
     paths:
       - "forex-monitor/**"
       - ".github/workflows/forex-monitor-tests.yml"
+      - ".github/workflows/forex-major-pair-monitor.yml"
   pull_request:
     paths:
       - "forex-monitor/**"
