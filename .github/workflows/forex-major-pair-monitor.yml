@@ -7,6 +7,12 @@ on:
     - cron: "*/5 6-10 * * 1-5"
       timezone: "America/Chicago"
   workflow_dispatch:
+    inputs:
+      email_test:
+        description: "Send a test email instead of scanning the market"
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -34,7 +40,22 @@ jobs:
       - name: Run offline scanner tests
         run: python -m unittest discover -s forex-monitor -p "test_*.py"
 
+      - name: Send Gmail SMTP test email
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.email_test }}
+        env:
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          ALERT_EMAIL_TO: ${{ secrets.ALERT_EMAIL_TO }}
+          ALERT_EMAIL_FROM: ${{ secrets.ALERT_EMAIL_FROM }}
+          GITHUB_SERVER_URL: ${{ github.server_url }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+        run: python -c "from email_alert import send_test_email; send_test_email()"
+
       - name: Scan major FX pairs and notify on new setups
+        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.email_test) }}
         env:
           TWELVE_DATA_API_KEY: ${{ secrets.TWELVE_DATA_API_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
