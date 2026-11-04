@@ -260,7 +260,7 @@ def analyze_symbol(symbol: str, minute_rows, now: datetime, strengths: dict[str,
     change30 = 100.0*(current_price/minute_rows[-31][4]-1.0)
     trend5 = "up" if fast5>slow5 else "down" if fast5<slow5 else "flat"
     trend15 = "up" if fast15>slow15 else "down" if fast15<slow15 else "flat"
-    trend1h = "up" if fast1h>slow1h else "down" if fast1h<slow1h else "flat"
+    trend_htf = "up" if fast1h>slow1h else "down" if fast1h<slow1h else "flat"
     candle_range = max(last.high-last.low,pip)
     body = abs(last.close-last.open)
     close_location = (last.close-last.low)/candle_range
@@ -273,7 +273,7 @@ def analyze_symbol(symbol: str, minute_rows, now: datetime, strengths: dict[str,
         "symbol":symbol,"status":"fresh","price":round_price(current_price,symbol),
         "price_time_utc":latest_time.isoformat(),"quote_age_minutes":round(age_minutes,1),
         "change_30m_pct":round(change30,4),"trend_5m":trend5,"trend_15m":trend15,
-        "trend_1h_proxy":trend1h,"rsi_5m":round(momentum,1),"adx_5m":round(trend_strength,1),
+        "trend_higher_timeframe_proxy":trend_htf,"rsi_5m":round(momentum,1),"adx_5m":round(trend_strength,1),
         "atr_5m_pips":round(volatility/pip,1),
         "base_currency_strength_30m":round(base_strength,4),
         "quote_currency_strength_30m":round(quote_strength,4),
@@ -281,10 +281,10 @@ def analyze_symbol(symbol: str, minute_rows, now: datetime, strengths: dict[str,
         "spread":"not_available_from_candle_feed","economic_calendar":"not_connected",
     }
     common = trend_strength>=17.0 and body>=0.40*volatility and 0.75<=expansion<=2.0
-    bullish = (common and trend5==trend15==trend1h=="up" and relative_strength>0
+    bullish = (common and trend5==trend15==trend_htf=="up" and relative_strength>0
         and 52<=momentum<=70 and last.close>last.open and close_location>=0.72
         and last.close>breakout_high+0.05*volatility and previous.close<=prior_high)
-    bearish = (common and trend5==trend15==trend1h=="down" and relative_strength<0
+    bearish = (common and trend5==trend15==trend_htf=="down" and relative_strength<0
         and 30<=momentum<=48 and last.close<last.open and close_location<=0.28
         and last.close<breakout_low-0.05*volatility and previous.close>=prior_low)
     direction, breakout = ("BUY",breakout_high) if bullish else (("SELL",breakout_low) if bearish else (None,None))
@@ -308,7 +308,7 @@ def analyze_symbol(symbol: str, minute_rows, now: datetime, strengths: dict[str,
         "breakout_level":round_price(breakout,symbol),"rsi":round(momentum,1),
         "adx":round(trend_strength,1),"fast_5m":round_price(fast5,symbol),
         "slow_5m":round_price(slow5,symbol),"fast_15m":round_price(fast15,symbol),
-        "slow_15m":round_price(slow15,symbol),"trend_1h_proxy":trend1h,
+        "slow_15m":round_price(slow15,symbol),"trend_higher_timeframe_proxy":trend_htf,
         "relative_strength_30m":round(relative_strength,4),
         "spread_verified":False,"news_calendar_verified":False,
     }
