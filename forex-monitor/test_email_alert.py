@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import patch
 
-from email_alert import send_trade_email
+from email_alert import send_test_email, send_trade_email
 
 
 CANDIDATE = {
@@ -70,6 +70,34 @@ class EmailAlertTests(unittest.TestCase):
         self.assertEqual(smtp_factory.call_args.args[:2], ("smtp.example.test", 465))
         smtp.starttls.assert_not_called()
         smtp.login.assert_called_once()
+
+    def test_test_email_requires_configuration(self):
+        with self.assertRaisesRegex(RuntimeError, "SMTP_HOST"):
+            send_test_email(environ={})
+
+    @patch("email_alert.smtplib.SMTP")
+    def test_test_email_is_clearly_labelled_and_sends_no_trade_signal(self, smtp_factory):
+        smtp = smtp_factory.return_value.__enter__.return_value
+        smtp.send_message.return_value = {}
+        env = dict(
+            SMTP_ENV,
+            GITHUB_REPOSITORY="owner/repo",
+            GITHUB_RUN_ID="123",
+            GITHUB_SERVER_URL="https://github.com",
+        )
+
+        send_test_email(environ=env)
+
+        smtp_factory.assert_called_once_with("smtp.example.test", 587, timeout=20)
+        smtp.starttls.assert_called_once()
+        smtp.login.assert_called_once_with("alerts@example.test", "test-only-password")
+        message = smtp.send_message.call_args.args[0]
+        self.assertIn("TEST ONLY", message["Subject"])
+        self.assertEqual(message["To"], "trader@example.test")
+        body = message.get_content()
+        self.assertIn("No trade was generated", body)
+        self.assertIn("not a BUY or SELL alert", body)
+        self.assertIn("https://github.com/owner/repo/actions/runs/123", body)
 
 
 if __name__ == "__main__":
