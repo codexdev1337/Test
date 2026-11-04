@@ -2,9 +2,9 @@ name: Forex major-pair monitor
 
 on:
   schedule:
-    # 06:00-11:55 America/Chicago, Monday-Friday.
-    # Six hours keeps the private-repository runner and free FX-data budgets bounded.
-    - cron: "*/5 6-11 * * 1-5"
+    # 06:00-10:55 America/Chicago, Monday-Friday.
+    # Five hours keeps the private-repository runner and free FX-data budgets bounded.
+    - cron: "*/5 6-10 * * 1-5"
       timezone: "America/Chicago"
   workflow_dispatch:
 
