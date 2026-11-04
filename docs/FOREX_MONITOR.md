@@ -8,7 +8,7 @@ A GitHub Actions workflow scans these pairs during the weekday London/New York t
 - AUD/USD, NZD/USD, USD/CAD
 - EUR/GBP (liquid cross-pair)
 
-The scan schedule is every five minutes from 06:00 through 11:55 America/Chicago, Monday through Friday. It posts a comment to issue #1 only when a **new** rule-based setup passes the filters. No-trade scans remain in the Actions run logs, avoiding a notification every five minutes.
+The scan schedule is every five minutes from 06:00 through 10:55 America/Chicago, Monday through Friday. It posts a comment to issue #1 only when a **new** rule-based setup passes the filters. No-trade scans remain in the Actions run logs, avoiding a notification every five minutes.
 
 This is a conditional technical scanner, not a broker, not an execution bot, and not a validated promise of positive expectancy. It never submits orders.
 
@@ -38,8 +38,8 @@ Stops are 1.2 × ATR(14), with a 6-pip minimum. Targets are 1R and 1.8R. The ale
 
 ## Usage and reliability
 
-- Twelve Data's Basic tier currently lists 800 API credits per day. A batch time-series request costs one credit per symbol, so eight symbols × 72 scans = about 576 credits per full weekday schedule. Check your account dashboard for actual quota and usage.
-- The six-hour schedule is 72 runs per weekday. In a private repository, GitHub-hosted Actions minutes are quota-limited; on GitHub Free the published allowance is 2,000 minutes/month. At one billed minute per run, a 23-weekday month would use about 1,656 minutes, before manual reruns or runs longer than one minute.
+- Twelve Data's Basic tier currently lists 800 API credits per day. A batch time-series request costs one credit per symbol, so eight symbols × 60 scans = about 480 credits per full weekday schedule. Check your account dashboard for actual quota and usage.
+- The five-hour schedule is 60 runs per weekday. In a private repository, GitHub-hosted Actions minutes are quota-limited; on GitHub Free the published allowance is 2,000 minutes/month. At one billed minute per run, a 23-weekday month would use about 1,380 minutes, before manual reruns or runs longer than one minute.
 - GitHub documents the five-minute minimum for scheduled workflows, but also warns scheduled events can be delayed during heavy load or dropped. The scanner is therefore **best-effort**, not a hard real-time five-minute service.
 - FX candle closes are indicative vendor data and are not your broker's executable bid/ask. Spread, slippage, feed differences, news, and stale prices can invalidate an alert. Check the broker quote and calendar before trading.
 - The workflow has issue-comment write permission only; it has no brokerage credentials and cannot place trades.
