@@ -49,6 +49,18 @@ Add these repository secrets under **Settings → Secrets and variables → Acti
 
 Use a provider-issued app password where your mail provider requires one. Never put the SMTP password in a repository file or issue comment. The sender and recipient addresses are not printed to workflow logs.
 
+### Test Gmail delivery without waiting for a trade
+
+1. Open **Actions → Forex major-pair monitor → Run workflow**.
+2. Select branch `main`.
+3. Tick **Send a test email instead of scanning the market** (`email_test`).
+4. Click **Run workflow**.
+5. Open the run. The step **Send Gmail SMTP test email** should complete successfully and the log should say that Gmail accepted the message for delivery.
+6. Check the recipient inbox and Spam folder for **TEST ONLY — Forex Monitor Gmail delivery check**.
+
+A test run sends one clearly labelled test message and skips the live market scan. Leave the checkbox unticked for normal manual scans. Scheduled scans are unaffected and continue to email only new AI-approved candidates.
+
+
 ## Decision and risk rules
 
 - 5m, 15m and slower higher-timeframe trend proxies must agree.
