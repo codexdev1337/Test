@@ -336,7 +336,10 @@ def github_request(method: str, url: str, token: str, body: dict[str, Any] | Non
             return json.loads(response.read().decode("utf-8"))
     except urllib.error.HTTPError as exc:
         detail = exc.read(500).decode("utf-8", "replace")
-        raise RuntimeError(f"GitHub notification request fadef post_ai_decision(decision, candidates, token, repo, issue, model, run_id="", server_url="https://github.com"):
+        raise RuntimeError(f"GitHub notification request failed ({exc.code}): {detail}") from exc
+
+
+def post_ai_decision(decision, candidates, token, repo, issue, model, run_id="", server_url="https://github.com"):
     if decision.get("action") == "NO_TRADE":
         print("AI decision: NO_TRADE — " + str(decision.get("thesis", "No reason supplied")))
         return False
@@ -406,9 +409,7 @@ def github_request(method: str, url: str, token: str, body: dict[str, Any] | Non
         {"body": updated_body},
     )
     print(f"Email notification sent for {candidate['symbol']} {candidate['direction']}; duplicate notifications suppressed.")
-    return Trueision['confidence']}).")
     return True
-
 
 def main() -> int:
     data_key=os.environ.get("TWELVE_DATA_API_KEY","").strip()
