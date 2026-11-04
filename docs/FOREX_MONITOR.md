@@ -1,51 +1,62 @@
-# Five-minute major-FX monitor
+# Five-minute AI-reviewed major-FX monitor
 
 ## What it does
 
-A GitHub Actions workflow scans these pairs during the weekday London/New York trading window:
+The GitHub Actions workflow scans eight liquid pairs every five minutes on weekdays from 06:00 through 10:55 America/Chicago:
 
 - EUR/USD, GBP/USD, USD/JPY, USD/CHF
 - AUD/USD, NZD/USD, USD/CAD
-- EUR/GBP (liquid cross-pair)
+- EUR/GBP
 
-The scan schedule is every five minutes from 06:00 through 10:55 America/Chicago, Monday through Friday. It posts a comment to issue #1 only when a **new** rule-based setup passes the filters. No-trade scans remain in the Actions run logs, avoiding a notification every five minutes.
+It is a two-stage decision system:
 
-This is a conditional technical scanner, not a broker, not an execution bot, and not a validated promise of positive expectancy. It never submits orders.
+1. **Deterministic market screen.** Fetches 1-minute candles, builds completed 5-minute/15-minute bars, rejects stale/incomplete data, checks 5m/15m trend alignment plus a slower higher-timeframe EMA proxy, RSI, ADX, candle body/close location, volatility expansion, breakout quality, extension from the trigger, and 30-minute relative currency strength across the pair set.
+2. **GPT decision review.** Only if at least one setup survives the hard technical gates, GPT reviews every surviving candidate alongside the eight-pair snapshot and currency-strength context. It can select one candidate or reject every candidate with NO_TRADE. It must consider contradictory pair signals, weak trend/momentum, late entries, missing spread/news verification, and risk context.
+
+The model is deliberately constrained: it cannot invent a trade, choose a pair that did not pass the scanner, change direction, or edit the scanner's entry, stop, and target levels. The model must return a qualitative HIGH or MEDIUM grade to trigger an alert. These grades are not probabilities and have not been calibrated to win rates.
+
+The default model is \`gpt-6-luna\`. The workflow calls the OpenAI Responses API directly. This is a separate API integration and is billed according to API usage; a ChatGPT subscription does not include API credits.
 
 ## Enable it
 
-1. Create a free Twelve Data account and obtain an API key: https://twelvedata.com/forex
-2. In this private repository, open **Settings → Secrets and variables → Actions → Secrets → New repository secret**.
-3. Name the secret `TWELVE_DATA_API_KEY` and paste the key into GitHub's secret field. Do not commit the key or paste it into chat.
-4. Under **Settings → Secrets and variables → Actions → Variables**, create repository variable `FOREX_MONITOR_ENABLED` with value `true`.
-5. Confirm GitHub Actions is enabled for the repository. The workflow file is already on the default branch.
-6. Subscribe to issue #1 to receive notifications when a fresh setup is posted: https://github.com/codexdev1337/Test/issues/1
-7. Use **Actions → Forex major-pair monitor → Run workflow** to test it after enabling.
+The default branch already contains the scanner, model gate, workflow, and tests. To activate:
 
-Until the variable is set to `true`, scheduled runs skip the job. This prevents runner usage before the API key is installed.
+1. Create a Twelve Data account and obtain a market-data API key: https://twelvedata.com/forex
+2. Create an OpenAI API key with access to the Responses API: https://platform.openai.com/api-keys
+3. Open **Settings → Secrets and variables → Actions → Secrets → New repository secret**.
+4. Add secret \`TWELVE_DATA_API_KEY\` with the Twelve Data key.
+5. Add secret \`OPENAI_API_KEY\` with the OpenAI API key.
+6. Under **Settings → Secrets and variables → Actions → Variables**, create repository variable \`FOREX_MONITOR_ENABLED\` with value \`true\`.
+7. Confirm GitHub Actions is enabled. Subscribe to issue #1 for alert notifications: https://github.com/codexdev1337/Test/issues/1
+8. Use **Actions → Forex major-pair monitor → Run workflow** to run the test and first scan.
 
-## Signal logic
+Do not paste either secret into chat, source files, issue comments, or workflow YAML. Enter them only into GitHub's secret fields. The workflow is gated off until \`FOREX_MONITOR_ENABLED=true\`.
 
-The scanner fetches one batch of 1-minute candles for all eight symbols and constructs completed 5-minute and 15-minute bars. A new alert requires:
+## Decision and risk rules
 
-- 5-minute EMA(9) / EMA(21) aligned with direction;
-- 15-minute EMA(9) / EMA(21) aligned with direction;
-- a close beyond the preceding 12 completed 5-minute bars' high/low;
-- RSI(14) confirmation (55–72 for buys; 28–45 for sells);
-- a fresh, recent candle and a latest indicative price that has not run materially away from the signal close.
+- 5m, 15m and slower higher-timeframe trend proxies must agree.
+- A candidate must show a 12-bar 5-minute range breakout, directional candle body and close location, RSI confirmation, ADX at or above the minimum trend threshold, and a volatility expansion that is neither too weak nor excessively spiky.
+- 30-minute signed pair returns are combined into a rough relative currency-strength context; the base currency must be stronger than the quote for a buy, and vice versa for a sell.
+- Price must remain close to the completed breakout candle; extended moves are rejected rather than chased.
+- Stop distance is 1.15 × ATR(14), with a 6-pip minimum. Targets are 1R and 2R. These are mechanical risk levels, not evidence of a profitable strategy.
+- The LLM may veto all candidates. If the API key is absent, the API fails, structured output is invalid, or the model selects anything outside the candidate list, the scan fails closed and sends no trade alert.
+- Alerts are deduplicated by pair, direction and breakout candle.
 
-Stops are 1.2 × ATR(14), with a 6-pip minimum. Targets are 1R and 1.8R. The alert includes candle timestamps and a stale-price guard. These are transparent screening rules, not a claim that the signals have been backtested or are profitable.
+## Important limitations
 
-## Usage and reliability
-
-- Twelve Data's Basic tier currently lists 800 API credits per day. A batch time-series request costs one credit per symbol, so eight symbols × 60 scans = about 480 credits per full weekday schedule. Check your account dashboard for actual quota and usage.
-- The five-hour schedule is 60 runs per weekday. In a private repository, GitHub-hosted Actions minutes are quota-limited; on GitHub Free the published allowance is 2,000 minutes/month. At one billed minute per run, a 23-weekday month would use about 1,380 minutes, before manual reruns or runs longer than one minute.
-- GitHub documents the five-minute minimum for scheduled workflows, but also warns scheduled events can be delayed during heavy load or dropped. The scanner is therefore **best-effort**, not a hard real-time five-minute service.
-- FX candle closes are indicative vendor data and are not your broker's executable bid/ask. Spread, slippage, feed differences, news, and stale prices can invalidate an alert. Check the broker quote and calendar before trading.
-- The workflow has issue-comment write permission only; it has no brokerage credentials and cannot place trades.
+- The candle feed does not provide the user's broker executable bid/ask spread. Spread must be checked manually before entry.
+- No economic calendar or live news feed is connected. Scheduled event risk is therefore unknown and must be checked manually. The model is instructed not to invent news or claim the calendar is safe.
+- The 30-minute currency-strength calculation is a rough cross-pair context signal, not an institutional currency index.
+- The scanner is not backtested or forward-validated. A model's qualitative confidence is not a statistical probability of success. Record paper-trading results before risking capital.
+- The workflow never connects to a broker and cannot submit or manage orders.
+- GitHub documents five-minute scheduled workflows but warns that runs can be delayed or dropped during heavy load. Treat this as best-effort alerts, not hard real-time market monitoring.
+- The schedule runs 60 scans per weekday. Eight time-series symbols consume approximately 480 Twelve Data credits per full weekday schedule, assuming the current one-credit-per-symbol batch pricing. Verify current account quotas and actual usage.
+- At one billed Actions minute per scan, a 23-weekday month would use about 1,380 minutes. Actual usage can be higher if jobs take longer or are manually rerun.
 
 ## Operator links
 
-- Alert / notification thread: https://github.com/codexdev1337/Test/issues/1
+- Alert thread: https://github.com/codexdev1337/Test/issues/1
 - Workflow: https://github.com/codexdev1337/Test/actions/workflows/forex-major-pair-monitor.yml
-- Scanner implementation: ../forex-monitor/scan.py
+- Scanner: ../forex-monitor/scan.py
+- AI decision gate: ../forex-monitor/decision_engine.py
+- Offline tests: ../forex-monitor/test_scan.py and ../forex-monitor/test_decision_engine.py
