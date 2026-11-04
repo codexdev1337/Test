@@ -31,6 +31,9 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Run offline scanner tests
+        run: python -m unittest discover -s forex-monitor -p "test_*.py"
+
       - name: Scan major FX pairs and notify on new setups
         env:
           TWELVE_DATA_API_KEY: ${{ secrets.TWELVE_DATA_API_KEY }}
