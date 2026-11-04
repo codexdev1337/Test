@@ -26,6 +26,7 @@ GITHUB_API = "https://api.github.com"
 USER_AGENT = "codexdev1337-forex-monitor/2.0"
 
 from decision_engine import review as ai_review
+from email_alert import send_trade_email
 
 
 @dataclass(frozen=True)
@@ -335,43 +336,77 @@ def github_request(method: str, url: str, token: str, body: dict[str, Any] | Non
             return json.loads(response.read().decode("utf-8"))
     except urllib.error.HTTPError as exc:
         detail = exc.read(500).decode("utf-8", "replace")
-        raise RuntimeError(f"GitHub notification request failed ({exc.code}): {detail}") from exc
-
-
-def post_ai_decision(decision, candidates, token, repo, issue, model):
-    if decision.get("action")=="NO_TRADE":
-        print("AI decision: NO_TRADE — "+str(decision.get("thesis","No reason supplied")))
+        raise RuntimeError(f"GitHub notification request fadef post_ai_decision(decision, candidates, token, repo, issue, model, run_id="", server_url="https://github.com"):
+    if decision.get("action") == "NO_TRADE":
+        print("AI decision: NO_TRADE — " + str(decision.get("thesis", "No reason supplied")))
         return False
-    candidate=next(c for c in candidates if c["candidate_id"]==decision["candidate_id"])
-    comments_url=f"{GITHUB_API}/repos/{repo}/issues/{issue}/comments"
-    comments=github_request("GET",comments_url+"?per_page=100&direction=desc",token)
-    marker=f"<!-- forex-ai-signal:{candidate['candidate_id']} -->"
-    if marker in "\n".join(str(item.get("body","")) for item in comments):
-        print("AI-selected candidate already reported; suppressing duplicate.")
-        return False
+
+    candidate = next(c for c in candidates if c["candidate_id"] == decision["candidate_id"])
+    comments_url = f"{GITHUB_API}/repos/{repo}/issues/{issue}/comments"
+    comments = github_request("GET", comments_url + "?per_page=100&direction=desc", token)
+    signal_marker = f"<!-- forex-ai-signal:{candidate['candidate_id']} -->"
+    email_marker = f"<!-- forex-email-sent:{candidate['candidate_id']} -->"
+
+    # Reuse an existing signal comment when an earlier SMTP attempt failed.
+    signal_comment = next(
+        (item for item in comments if signal_marker in str(item.get("body", ""))),
+        None,
+    )
+
     def bullets(values):
-        if not isinstance(values,list) or not values:
+        if not isinstance(values, list) or not values:
             return "- Not supplied"
         return "\n".join(f"- {str(value)[:350]}" for value in values[:5])
-    body="\n".join([
-        "## AI-reviewed major-FX setup","",
-        f"**Decision:** {candidate['symbol']} {candidate['direction']} · qualitative grade **{decision['confidence']}**",
-        f"**Model:** {model} (grade is not a probability of profit)","",
-        f"**Indicative entry:** {candidate['entry']}",
-        f"**Stop loss:** {candidate['stop']} ({candidate['risk_pips']} pips)",
-        f"**Target 1:** {candidate['target_1']} (1R)",
-        f"**Target 2:** {candidate['target_2']} (2R)",
-        f"**AI holding horizon:** {decision['expected_holding_minutes']} minutes","",
-        f"**AI thesis:** {decision['thesis']}","",
-        "**Supporting factors**",bullets(decision.get("supporting_factors")),"",
-        "**Risks**",bullets(decision.get("risks")),"",
-        f"**Invalidation:** {decision['invalidation']}","",
-        "**Manual checks:** broker bid/ask spread and economic-news risk are not connected. Verify both and confirm the live broker quote before placing an order. Discard if price has moved away from entry or the breakout has failed.",
-        "",
-        "> Conditional analysis only. The AI may reject all trades. It never places orders, and no signal guarantees profit.","",marker,
-    ])
-    github_request("POST",comments_url,token,{"body":body})
-    print(f"AI decision: selected {candidate['symbol']} {candidate['direction']} ({decision['confidence']}).")
+
+    if signal_comment is None:
+        body = "\n".join([
+            "## AI-reviewed major-FX setup", "",
+            f"**Decision:** {candidate['symbol']} {candidate['direction']} · qualitative grade **{decision['confidence']}**",
+            f"**Model:** {model} (grade is not a probability of profit)", "",
+            f"**Indicative entry:** {candidate['entry']}",
+            f"**Stop loss:** {candidate['stop']} ({candidate['risk_pips']} pips)",
+            f"**Target 1:** {candidate['target_1']} (1R)",
+            f"**Target 2:** {candidate['target_2']} (2R)",
+            f"**AI holding horizon:** {decision['expected_holding_minutes']} minutes", "",
+            f"**AI thesis:** {decision['thesis']}", "",
+            "**Supporting factors**", bullets(decision.get("supporting_factors")), "",
+            "**Risks**", bullets(decision.get("risks")), "",
+            f"**Invalidation:** {decision['invalidation']}", "",
+            "**Manual checks:** broker bid/ask spread and economic-news risk are not connected. Verify both and confirm the live broker quote before placing an order. Discard if price has moved away from entry or the breakout has failed.",
+            "",
+            "> Conditional analysis only. The AI may reject all trades. It never places orders, and no signal guarantees profit.",
+            "", signal_marker,
+        ])
+        signal_comment = github_request("POST", comments_url, token, {"body": body})
+        if not isinstance(signal_comment, dict) or not signal_comment.get("id"):
+            raise RuntimeError("GitHub did not return the new alert comment ID; email deduplication cannot be secured.")
+
+    existing_body = str(signal_comment.get("body", ""))
+    if email_marker in existing_body:
+        print("Email alert already sent for this candidate; suppressing duplicate.")
+        return False
+
+    # A failed SMTP attempt leaves the email marker unset so a later scan can retry.
+    send_trade_email(
+        candidate=candidate,
+        decision=decision,
+        model=model,
+        repo=repo,
+        issue=issue,
+        run_id=run_id,
+        server_url=server_url,
+    )
+
+    updated_body = existing_body.rstrip() + "\n\n" + email_marker
+    comment_id = signal_comment.get("id")
+    github_request(
+        "PATCH",
+        f"{GITHUB_API}/repos/{repo}/issues/comments/{comment_id}",
+        token,
+        {"body": updated_body},
+    )
+    print(f"Email notification sent for {candidate['symbol']} {candidate['direction']}; duplicate notifications suppressed.")
+    return Trueision['confidence']}).")
     return True
 
 
@@ -382,6 +417,8 @@ def main() -> int:
     repo=os.environ.get("GITHUB_REPOSITORY","").strip()
     issue=os.environ.get("FOREX_ALERT_ISSUE","1").strip()
     model=os.environ.get("OPENAI_MODEL","gpt-6-luna").strip()
+    run_id=os.environ.get("GITHUB_RUN_ID","").strip()
+    server_url=os.environ.get("GITHUB_SERVER_URL","https://github.com").strip()
     missing=[key for key,value in (
         ("TWELVE_DATA_API_KEY",data_key),("OPENAI_API_KEY",openai_key),
         ("GITHUB_TOKEN",token),("GITHUB_REPOSITORY",repo)) if not value]
@@ -409,7 +446,7 @@ def main() -> int:
 
     # Fail closed: never send indicators-only alerts if model review fails.
     decision=ai_review(candidates,snapshots,strengths,now.isoformat(),openai_key,model)
-    post_ai_decision(decision,candidates,token,repo,issue,model)
+    post_ai_decision(decision,candidates,token,repo,issue,model,run_id,server_url)
     return 0
 
 

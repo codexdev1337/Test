@@ -32,6 +32,23 @@ The default branch already contains the scanner, model gate, workflow, and tests
 
 Do not paste either secret into chat, source files, issue comments, or workflow YAML. Enter them only into GitHub's secret fields. The workflow is gated off until \`FOREX_MONITOR_ENABLED=true\`.
 
+## Email alerts
+
+The scanner sends an email only after a **new** candidate passes the deterministic filters and receives a HIGH or MEDIUM AI approval. A `NO_TRADE` decision, a scan with no candidate, or a previously emailed candidate does not generate another email. The alert is first recorded in issue #1; an email-delivery marker is stored on that issue comment so a failed SMTP attempt can be retried on a later scan.
+
+Add these repository secrets under **Settings → Secrets and variables → Actions → Secrets**:
+
+| Secret name | Value |
+|---|---|
+| `SMTP_HOST` | Your mailbox provider's SMTP server hostname |
+| `SMTP_PORT` | `587` for STARTTLS or `465` for implicit TLS |
+| `SMTP_USERNAME` | Full email address used to authenticate |
+| `SMTP_PASSWORD` | Mailbox SMTP password or provider-issued app password |
+| `ALERT_EMAIL_TO` | Address that should receive the alerts |
+| `ALERT_EMAIL_FROM` | Optional sender address; defaults to `SMTP_USERNAME` |
+
+Use a provider-issued app password where your mail provider requires one. Never put the SMTP password in a repository file or issue comment. The sender and recipient addresses are not printed to workflow logs.
+
 ## Decision and risk rules
 
 - 5m, 15m and slower higher-timeframe trend proxies must agree.
