@@ -40,6 +40,7 @@ class EmailAlertTests(unittest.TestCase):
     @patch("email_alert.smtplib.SMTP")
     def test_starttls_delivery_contains_trade_levels_and_risk_notes(self, smtp_factory):
         smtp = smtp_factory.return_value.__enter__.return_value
+        smtp.send_message.return_value = {}
 
         send_trade_email(
             CANDIDATE, DECISION, "test-model", "owner/repo", "1",
@@ -62,6 +63,7 @@ class EmailAlertTests(unittest.TestCase):
     def test_port_465_uses_implicit_tls(self, smtp_factory):
         env = dict(SMTP_ENV, SMTP_PORT="465")
         smtp = smtp_factory.return_value.__enter__.return_value
+        smtp.send_message.return_value = {}
 
         send_trade_email(CANDIDATE, DECISION, "test-model", "owner/repo", "1", environ=env)
 
