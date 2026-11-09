@@ -19,6 +19,7 @@ ForgeLab is a local-first R&D workbench evolving toward a governed autonomous re
 - [0.4.0.dev1 implementation snapshot](docs/IMPLEMENTATION_0.4.0_DEV1.md)
 - [Development roadmap](docs/ROADMAP.md)
 - [Forex Monitor 20-cycle improvement plan](docs/FOREX_IMPROVEMENT_PLAN_20_CYCLES.md)
+- [Forex Monitor zero-subscription market-data research](docs/FOREX_FREE_DATA_STACK.md)
 - [Artifact and source handoff notes](artifacts/README.md)
 
 ## What is implemented in 0.4.0.dev1
