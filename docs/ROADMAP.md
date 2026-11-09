@@ -35,6 +35,13 @@ Detailed specification: [20-Cycle Improvement Research and Implementation Plan](
 | FM-5 | Decision quality | Calibrated outcome probabilities, entry/expiry lifecycle and portfolio exposure limits |
 | FM-6 | Validation and operations | Walk-forward/holdout/PBO/DSR research, forward paper gate, quota guard, durable storage, alert outbox, monitoring and rollback |
 
+
+### Zero-subscription data-source decision (research only)
+
+A provider shortlist and limitations are documented in [Forex Monitor — Zero-Subscription Market Data Research](FOREX_FREE_DATA_STACK.md). The preferred $0 baseline is Twelve Data Basic for the existing 8-pair five-minute scan, a broker-specific bid/ask adapter (cTrader Open API or OANDA v20, depending on the actual broker), Dukascopy historical ticks for offline replay, official macro sources plus FRED/ALFRED, a Marketaux/GDELT/official-source news pilot, and CFTC weekly positioning.
+
+This does not supply a universal consolidated FX book, comprehensive free market consensus calendar, premium newswire SLA or multi-year executable tick history for every broker. The research does not authorize live rule changes. Signal ledger and outcome replay remain ahead of sentiment weighting and production promotion.
+
 ### Forex workstream sequencing and release gates
 
 1. Do not modify production signal thresholds before FM-1 can record all candidates and evaluate subsequent outcomes.
