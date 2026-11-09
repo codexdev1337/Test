@@ -18,6 +18,34 @@
 
 The 0.4.0.dev1 preview implements an initial subset of FL-401: versioned stage-attempt rows, output digests, input fingerprints, cache reuse on retry, worker reuse of the run ID, and stage inspection through CLI/API. It has 47 passing automated tests and the three offline benchmark cases pass in the current environment. The preview does not satisfy all 0.4.0 release gates.
 
+
+## Forex Monitor improvement track (proposed; separate workstream)
+
+The Forex Monitor roadmap is maintained as a parallel track to the ForgeLab core releases above. It does not change the ForgeLab release numbering and does not mean any trading feature is already implemented.
+
+Detailed specification: [20-Cycle Improvement Research and Implementation Plan](FOREX_IMPROVEMENT_PLAN_20_CYCLES.md).
+
+| Track | Focus | Primary outcomes |
+|---|---|---|
+| FM-0 | Operational truth | Verify activation, scan execution, email test, heartbeat, schedule lag and provider/API health |
+| FM-1 | Research data foundation | Point-in-time data contracts, immutable signal/candidate ledger, replayable snapshots and multi-horizon outcome evaluator |
+| FM-2 | Execution realism | Intended-broker bid/ask pricing, spread/slippage/latency model and cost-aware target/stop evaluation |
+| FM-3 | Technical and market context | Indicator parity, genuine 1h bars, market regimes, currency-factor model and pair-correlation controls |
+| FM-4 | Fundamental and news | Economic calendar, consensus surprises/revisions, licensed headline ingestion, currency-aware sentiment and event-risk veto |
+| FM-5 | Decision quality | Calibrated outcome probabilities, entry/expiry lifecycle and portfolio exposure limits |
+| FM-6 | Validation and operations | Walk-forward/holdout/PBO/DSR research, forward paper gate, quota guard, durable storage, alert outbox, monitoring and rollback |
+
+### Forex workstream sequencing and release gates
+
+1. Do not modify production signal thresholds before FM-1 can record all candidates and evaluate subsequent outcomes.
+2. Do not make ACTIONABLE alerts dependent on a new feed until the provider has passed provenance, freshness, latency, historical availability, cost and licensing checks.
+3. Do not treat candle mid/close as an executable broker quote; FM-2 is required for net-performance claims.
+4. News sentiment and macro surprises must be point-in-time replayable, and initially operate in shadow/reporting mode.
+5. Calibrated probabilities require held-out outcomes and must be monitored by pair, regime and session.
+6. No signal expansion or strategy promotion without realistic costs, chronological out-of-sample results and forward paper evidence.
+7. The scanner remains analysis-only and does not place or manage broker orders.
+
+
 ## Sequencing principles
 
 1. Reliability and resource controls precede more autonomous agents.
